@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Python WiFi -- a library to access wireless card properties via Python
 # Copyright (C) 2004 - 2008 Róman Joost
 # Copyright (C) 2008 - 2009 Sean Robinson
@@ -21,9 +20,6 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 #    USA
 
-from __future__ import print_function
-from __future__ import division
-
 import ctypes
 import struct
 import array
@@ -34,16 +30,11 @@ import os
 import socket
 import time
 import re
-import sys
-import six
 
 import pythonwifi.flags
 
-if (sys.version_info[0] == 2):
-	from types import StringType, IntType, TupleType
-else:
-	from typing import Tuple
-	IntType = int
+from typing import Tuple
+IntType = int
 
 KILO = 10**3
 MEGA = 10**6
@@ -121,11 +112,7 @@ def getConfiguredWNICnames():
 			try:
 				result = wifi.getAPaddr()
 			except IOError as e:
-				if (sys.version_info[0] == 3):
-					errno, strerror = e.args
-				else:
-					errno = e[0]
-					strerror = e[1]
+				errno, strerror = e.args
 				# don't stop on an individual error
 				pass
 			if result[0] == 0:
@@ -308,8 +295,7 @@ class Wireless(object):
 		"""
 		if len(essid) > pythonwifi.flags.IW_ESSID_MAX_SIZE:
 			raise OverflowError(errno.EOVERFLOW, os.strerror(errno.EOVERFLOW))
-		if (sys.version_info[0] == 3):
-			essid = bytes(essid,'unicode-escape')
+		essid = bytes(essid,'unicode-escape')
 		iwpoint = Iwpoint(essid, 1)
 		status, result = self.iwstruct.iw_set_ext(self.ifname,
 											 pythonwifi.flags.SIOCSIWESSID,
@@ -430,8 +416,7 @@ class Wireless(object):
 			raw_key = self.getKey(index, False)
 			cooked_key = map(chr, raw_key)
 
-		if (sys.version_info[0] == 3):
-			cooked_key = bytes(cooked_key, 'unicode-escape')
+		cooked_key = bytes(cooked_key, 'unicode-escape')
 
 		iwpoint = Iwpoint(cooked_key,
 					index + pythonwifi.flags.IW_ENCODE_ENABLED)
@@ -742,10 +727,7 @@ class WirelessConfig(object):
 											 pythonwifi.flags.SIOCGIWNAME)
 
 		result = result.tobytes().strip(b'\x00')
-		if (sys.version_info[0] == 2):
-			return result
-		else:
-			return result.decode("unicode-escape")
+		return result.decode("unicode-escape")
 
 	def getEncryption(self):
 		""" Returns the encryption status.
@@ -819,10 +801,7 @@ class WirelessConfig(object):
 											 data=iwpoint.packed_data)
 		raw_essid = iwpoint.buff.tobytes()
 		result = raw_essid.strip(b'\x00')
-		if (sys.version_info[0] == 2):
-			return result
-		else:
-			return result.decode("unicode-escape")
+		return result.decode("unicode-escape")
 
 	def getMode(self):
 		""" Returns currently set operation mode.
@@ -1037,11 +1016,8 @@ class Iwstruct(object):
 	def pack_test(self, string, buffsize):
 		""" Packs wireless request data for sending it to the kernel. """
 		buffsize = buffsize - len(string)
-		if (sys.version_info[0] == 2):
-			buff = array.array('c', string+'\0'*buffsize)
-		else:
-			var_bytes = bytes(string, 'unicode-escape')
-			buff = array.array('B', var_bytes + b'\0'*buff)
+		var_bytes = bytes(string, 'unicode-escape')
+		buff = array.array('B', var_bytes + b'\0'*buff)
 		caddr_t, length = buff.buffer_info()
 		s = struct.pack('PHH', caddr_t, length, 1)
 		return buff, s
@@ -1056,10 +1032,7 @@ class Iwstruct(object):
 	def iw_get_ext(self, ifname, request, data=None):
 		""" Read information from ifname. """
 		buff = pythonwifi.flags.IFNAMSIZE-len(ifname)
-		if (sys.version_info[0] == 2):
-			ifreq = array.array('c', ifname + '\0'*buff)
-		else:
-			ifreq = array.array('B', six.ensure_binary(ifname) + b'\0'*buff)
+		ifreq = array.array('B', ifname + b'\0'*buff)
 		# put some additional data behind the interface name
 		if data is not None:
 			ifreq.extend(data)
@@ -1120,9 +1093,7 @@ class Iwfreq(object):
 		self.index = 0
 		self.flags = 0
 		if data:
-			if sys.version_info[0] == 2 and isinstance(data, TupleType):
-				self.m, self.e, self.index, self.flags = data
-			elif sys.version_info[0] == 3 and isinstance(data, Tuple):
+			if isinstance(data, Tuple):
 				self.m, self.e, self.index, self.flags = data
 			else:
 				self.parse(data)
@@ -1460,11 +1431,7 @@ class Iwscan(object):
 												pythonwifi.flags.SIOCGIWSCAN,
 												data=datastr)
 			except IOError as e:
-				if (sys.version_info[0] == 3):
-					error_number, error_string = e.args
-				else:
-					error_number = e[0]
-					error_string = e[1]
+				error_number, error_string = e.args
 				if error_number == errno.E2BIG:
 					# Keep resizing the buffer until it's
 					#   large enough to hold the scan
@@ -1568,9 +1535,7 @@ class Iwscanresult(object):
 
 		"""
 		data_string = data
-		if (sys.version_info[0] == 3):
-			# convert byte to string
-			data_string = data.decode("unicode-escape")
+		data_string = data.decode("unicode-escape")
 		if ((cmd in range(pythonwifi.flags.SIOCIWFIRST,
 						  pythonwifi.flags.SIOCIWLAST+1)) or
 			(cmd in range(pythonwifi.flags.IWEVFIRST,

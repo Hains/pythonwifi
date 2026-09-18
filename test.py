@@ -1,11 +1,3 @@
-# Python 2
-# python2 setup.py build
-# python2 iwlist.py wlp59s0 channel
-# pip2 install python-wifi==0.6.1
-# python2 setup.py sdist --force-manifest --formats=bztar
-# pip2 install dist/python-wifi-0.6.2.tar.bz2
-# pip2 uninstall python-wifi
-
 # Python 3
 # python3 setup.py sdist --force-manifest --formats=bztar
 # python3 iwlist.py wlp59s0 channel
